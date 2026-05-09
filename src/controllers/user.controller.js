@@ -1,5 +1,5 @@
 const User = require("../models/user.model")
-const userServices = require("../services/user.services")
+const userServices = require("../services/user.service")
 
 const getAllUsers = async(req,res,next)=>{
     try {
