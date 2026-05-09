@@ -29,8 +29,34 @@ const loginUser = async (req,res,next)=>{
     }
 };
 
+const updateProfile = async (req,res,next)=>{
+    try {
+        const updateUser = await userServices.updateUserService(req.user.id,req.body);
+        res.json({
+            sucess:true,
+            updateUser
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const changePassword = async (req,res,next)=>{
+    try {
+        const updatedUser = await userServices.changePasswordService(req.user.id,req.body);
+        res.json({
+            success:true,
+            updatedUser
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAllUsers,
     registerUser,
-    loginUser
+    loginUser,
+    updateProfile,
+    changePassword
 };

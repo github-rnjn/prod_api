@@ -35,12 +35,53 @@ const loginService = async (userData)=>{
     if(!userExists){
         throw new AppError("User does not exists.",404);
     }
+    const isMatch = await bcryptjs.compare(password,userExists.password);
+    if(!isMatch){
+        throw new AppError("Password does not match",401);
+    }
     const token = generateToken(userExists);
     return token;
 };
 
+const updateUserService = async (userId,newData)=>{
+    const {name,email} = newData;
+    const existingUser = await User.findById(userId);
+    if(!existingUser){
+        throw new AppError("User not found",404);
+    }
+    existingUser.name = name || existingUser.name;
+    existingUser.email = email || existingUser.email;
+    await existingUser.save();
+    existingUser.password = undefined;
+    return existingUser;
+};
+
+const changePasswordService = async (userId,newData)=>{
+    const {oldPassword,newPassword} = newData;
+    if(!oldPassword || !newPassword){
+        throw new AppError("All fields are required.",400);
+    }
+    if(oldPassword===newPassword){
+        throw new AppError("Old and new password are same.",400);
+    }
+    const existingUser = await User.findById(userId);
+    if(!existingUser){
+        throw new AppError("User not found",404);
+    }
+    const isMatch = await bcryptjs.compare(oldPassword,existingUser.password);
+    if(!isMatch){
+        throw new AppError("Old password is incorrect",400);
+    }
+    existingUser.password = await bcryptjs.hash(newPassword,10);
+    await existingUser.save();
+    existingUser.password = undefined;
+    return existingUser;
+}
+
 module.exports = {
     getAllUsersService,
     createUserService,
-    loginService
+    loginService,
+    updateUserService,
+    changePasswordService
 };
