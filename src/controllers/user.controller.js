@@ -22,8 +22,11 @@ const registerUser = async (req,res,next)=>{
 
 const loginUser = async (req,res,next)=>{
     try {
-        const token = await userServices.loginService(req.body);
-        res.status(200).json({token});
+        const {accessToken,refreshToken} = await userServices.loginService(req.body);
+        res.status(200).json({
+            accessToken,
+            refreshToken
+        });
     } catch (error) {
         next(error);
     }
@@ -53,10 +56,23 @@ const changePassword = async (req,res,next)=>{
     }
 };
 
+const logout = async (req,res,next)=>{
+    try {
+        await userServices.logoutService(req.user.id);
+        res.json({
+            success:true,
+            message:"User logged out successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAllUsers,
     registerUser,
     loginUser,
     updateProfile,
-    changePassword
+    changePassword,
+    logout
 };

@@ -2,7 +2,7 @@ const User = require("../models/user.model");
 const AppError = require("../utils/appError");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const generateToken = require("../utils/jwt");
+const {generateAccessToken,generateRefreshToken} = require("../utils/jwt");
 
 const getAllUsersService = async ()=>{
     return await User.find().select("-password");
@@ -39,8 +39,11 @@ const loginService = async (userData)=>{
     if(!isMatch){
         throw new AppError("Password does not match",401);
     }
-    const token = generateToken(userExists);
-    return token;
+    const accessToken = generateAccessToken(userExists);
+    const refreshToken = generateRefreshToken(userExists);
+    userExists.refreshToken = refreshToken;
+    await userExists.save();
+    return {accessToken,refreshToken};
 };
 
 const updateUserService = async (userId,newData)=>{
@@ -76,12 +79,22 @@ const changePasswordService = async (userId,newData)=>{
     await existingUser.save();
     existingUser.password = undefined;
     return existingUser;
-}
+};
+
+const logoutService = async (userId)=>{
+    const user = await User.findById(userId);
+    if(!user){
+        throw new AppError("User doesn't exists.",404);
+    }
+    user.refreshToken = null;
+    await user.save();
+};
 
 module.exports = {
     getAllUsersService,
     createUserService,
     loginService,
     updateUserService,
-    changePasswordService
+    changePasswordService,
+    logoutService
 };
