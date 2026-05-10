@@ -4,8 +4,21 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {generateAccessToken,generateRefreshToken} = require("../utils/jwt");
 
-const getAllUsersService = async ()=>{
-    return await User.find().select("-password");
+const getAllUsersService = async (query)=>{
+    const page = parseInt(query.page) || 1;
+    const limit = parseInt(query.limit) || 5;
+    const skip = (page-1)*limit;
+    const search = query.search || "";
+    const filter = {
+        name:{$regex:search,$options:"i"}
+    };
+    const users = await User.find(filter)
+    .select("-password")
+    .skip(skip)
+    .limit(limit)
+
+    const countUsers = await User.countDocuments(filter);
+    return {countUsers,page,pages:Math.ceil(countUsers/limit),users};
 };
 
 const createUserService = async (userData)=>{
